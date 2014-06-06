@@ -8,16 +8,60 @@ import java.util.Scanner;
 
 public class Reciter {
 	private String dicPath;
+	private String dicPathWithoutExtension;
 	private Dictionary dict;
 	int startingIndexInDict = -1;
 	private Dictionary wordsToBeRecited;
 	int currentIndexInWordsToBeRecited = 0;
 
+	char initialChosen = '0';
+
 	public void initializeDictionary(String dicPath) {
 		this.dicPath = dicPath;
+		this.dicPathWithoutExtension = dicPath.substring(0,
+				dicPath.length() - 4);
+		File pieceA = new File(dicPathWithoutExtension + "-a.log");
+		if (!pieceA.exists()) {
+			Scanner scanner;
+			PrintWriter[] writer = new PrintWriter[26];
+
+			try {
+				File dicFile = new File(dicPath);
+				/* 开始读取文件 */
+				scanner = new Scanner(dicFile);
+
+				for (int i = 0; i < 26; i++) {
+					writer[i] = new PrintWriter(new File(
+							dicPathWithoutExtension + "-" + (char) (i + 'a')
+									+ ".log"));
+					writer[i].println("0");
+					writer[i].flush();
+				}
+
+				String thisLine;
+				while (scanner.hasNext()) {
+					thisLine = scanner.nextLine();
+					char firstLetter = thisLine.charAt(0);
+					writer[firstLetter - 'a'].println(thisLine + "   0   0");
+				}
+
+				for (int i = 0; i < 26; i++) {
+					writer[i].flush();
+					writer[i].close();
+				}
+				scanner.close();
+			} catch (FileNotFoundException e) {
+
+			}
+		}
+	}
+
+	public void choosePieceWithInitial(char initial) {
+		initialChosen = initial;
 		Scanner scanner;
 		try {
-			File dicFile = new File(dicPath);
+			File dicFile = new File(dicPathWithoutExtension + "-"
+					+ initialChosen + ".log");
 
 			/* 从dicFile中读入文件名，作为词库名初始化allWords */
 			String dicName = dicFile.getName();
@@ -27,45 +71,87 @@ public class Reciter {
 			scanner = new Scanner(dicFile);
 			String thisLine;
 
-			/* 读取第一行内容，若为数字，说明是上一次背诵时留下的记录 */
-			/* 若不是数字，说明该词库是第一次背 */
+			/* 读取第一行内容，是上次保存的单词序号 */
 			if (scanner.hasNext()) {
 				thisLine = scanner.nextLine();
-				try {
-					startingIndexInDict = Integer.parseInt(thisLine);
-				} catch (NumberFormatException nfex) {
-					String[] splittedThisLine = thisLine.split("   ");
-					/* 考虑到第一行没有数字，保证了词库第一次背，所以不可能记录有正确或错误次数 */
-					dict.insertWord(new WordStatus(splittedThisLine[0],
-							splittedThisLine[1], 0, 0));
-				}
+				startingIndexInDict = Integer.parseInt(thisLine);
 			}
 
+			/* 读剩余内容 */
 			while (scanner.hasNext()) {
 				thisLine = scanner.nextLine();
 				String[] splittedThisLine = thisLine.split("   ");
-				if (splittedThisLine.length == 2) {
-					dict.insertWord(new WordStatus(splittedThisLine[0],
-							splittedThisLine[1], 0, 0));
-				} else if (splittedThisLine.length == 4) {
-					String word = splittedThisLine[0];
-					String meaning = splittedThisLine[1];
-					int correctCount = Integer.parseInt(splittedThisLine[2]);
-					int incorrectCount = Integer.parseInt(splittedThisLine[3]);
-					dict.insertWord(new WordStatus(word, meaning, correctCount,
-							incorrectCount));
-				}
+
+				String word = splittedThisLine[0];
+				String meaning = splittedThisLine[1];
+				int correctCount = Integer.parseInt(splittedThisLine[2]);
+				int incorrectCount = Integer.parseInt(splittedThisLine[3]);
+				dict.insertWord(new WordStatus(word, meaning, correctCount,
+						incorrectCount));
 			}
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public DictionaryStatus getDictStatus() {
 		return dict.getDictionaryStatus();
+	}
+
+	public DictionaryStatus getAllDictStatus() {
+		Dictionary[] dictPiece = new Dictionary[26];
+		int totalLengthAll = 0, correctCountAll = 0, incorrectCountAll = 0, recitedCountAll = 0;
+
+		for (char i = 'a'; i <= 'z'; i++) {
+			Scanner scanner;
+			try {
+				File dicFile = new File(dicPathWithoutExtension + "-" + i
+						+ ".log");
+
+				/* 从dicFile中读入文件名，作为词库名初始化allWords */
+				String dicName = dicFile.getName();
+				dictPiece[i - 'a'] = new Dictionary(dicName);
+
+				/* 开始读取文件 */
+				scanner = new Scanner(dicFile);
+				String thisLine;
+
+				/* 读取第一行内容，是上次保存的单词序号 */
+				if (scanner.hasNext()) {
+					thisLine = scanner.nextLine();
+				}
+
+				/* 读剩余内容 */
+				while (scanner.hasNext()) {
+					thisLine = scanner.nextLine();
+					String[] splittedThisLine = thisLine.split("   ");
+
+					String word = splittedThisLine[0];
+					String meaning = splittedThisLine[1];
+					int correctCount = Integer.parseInt(splittedThisLine[2]);
+					int incorrectCount = Integer.parseInt(splittedThisLine[3]);
+					dictPiece[i - 'a'].insertWord(new WordStatus(word, meaning,
+							correctCount, incorrectCount));
+				}
+
+				scanner.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			totalLengthAll += dictPiece[i - 'a'].getDicLength();
+			correctCountAll += dictPiece[i - 'a'].sumCorrectCounts();
+			incorrectCountAll += dictPiece[i - 'a'].sumIncorrectCounts();
+			recitedCountAll += dictPiece[i - 'a'].sumRecitedCounts();
+
+		}
+
+		double accuracyAll = ((int) ((correctCountAll * 1.0 / (correctCountAll + incorrectCountAll)) * 1000)) * 1.0 / 1000;
+
+		return new DictionaryStatus("总词库", totalLengthAll, correctCountAll,
+				incorrectCountAll, recitedCountAll, accuracyAll);
 	}
 
 	public boolean setStartingIndexByWord(String word) {
@@ -117,25 +203,32 @@ public class Reciter {
 			return null;
 	}
 
-	public boolean testMatching(String word) {
+	public String testMatching(String word) {
 		WordStatus currentWord = getCurrentWord();
+		String answer = currentWord.getWord();
 		if (word.equals(currentWord.getWord())) {
 			currentIndexInWordsToBeRecited++;
 			currentWord.increaseCorrectCount();
-			return true;
+			return null;
 		} else {
+			currentIndexInWordsToBeRecited++;
 			currentWord.increaseIncorrectCount();
-			return false;
+			return answer;
 		}
 	}
 
 	public DictionaryStatus getRecitationStatus() {
 		return wordsToBeRecited.getDictionaryStatus();
 	}
+	
+	public char getChosenInitial(){
+		return initialChosen;
+	}
 
 	public void updateToFile() {
 		try {
-			PrintWriter writer = new PrintWriter(new File(dicPath));
+			PrintWriter writer = new PrintWriter(new File(
+					dicPathWithoutExtension + "-" + initialChosen + ".log"));
 
 			/* 本次没背的单词集合A，本次背过的单词集合B，本次没背的单词集合C */
 			/* 按顺序分三种情况存储 */
@@ -206,12 +299,17 @@ public class Reciter {
 		return null;
 	}
 
-	/*
-	 * public static void main(String[] main) { Reciter r = new Reciter();
-	 * r.initializeDictionary("E:/fukutan/软件工程/lab4/dictionary.txt");
-	 * r.setStartingIndexByWord("zip"); r.setReciteCount(5);
-	 * r.testMatching("zip"); r.testMatching("zipcode");
-	 * r.testMatching("zipper"); r.testMatching("zone"); r.testMatching("zoo");
-	 * r.updateToFile(); }
-	 */
+	public static void main(String[] args) {
+		Reciter r = new Reciter();
+		r.initializeDictionary("C:/Users/Xill/Documents/dictionary.txt");
+		/*
+		r.choosePieceWithInitial('a');
+		r.setStartingIndexToFirstWord();
+		r.setReciteCount(2);
+		r.testMatching("abandon");
+		r.testMatching("bachelor");
+		r.updateToFile();*/
+		System.out.println(r.getAllDictStatus());
+	}
+
 }

@@ -9,6 +9,7 @@ import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -27,16 +28,12 @@ import core.DictionaryStatus;
 
 public class Displayer extends JFrame {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	private MyMenuBar menuBar = new MyMenuBar();
 	private ImageCanvas ca = new ImageCanvas();
 	private JPanel welcome = new JPanel();
 	private JPanel jp = new JPanel();
 
-	private JButton jbChoose = new JButton("选择词库");
+	private JButton jbChoose = new JButton("选择词库源文件");
 	private JButton jbExit = new JButton("退出");
 
 	private JButton jbFirst = new JButton("从第一个单词开始");
@@ -51,6 +48,9 @@ public class Displayer extends JFrame {
 	private JComboBox<String> bar = new JComboBox<String>();
 	private JTextComponent jtc = (JTextComponent) (bar.getEditor()
 			.getEditorComponent());
+
+	private JComboBox<String> initialLetterList = new JComboBox<String>();
+	private JButton initialLetterSubmit = new JButton("选择该词库");
 
 	private JTextField jtf, jtf1;
 
@@ -106,7 +106,43 @@ public class Displayer extends JFrame {
 		jp.validate();
 	}
 
-	public void dictChosenView(DictionaryStatus ds) {
+	public void dictFileChosenView(DictionaryStatus ds) {
+		welcome.removeAll();
+
+		// 显示统计信息
+		JPanel jp1 = new JPanel();
+		JLabel jl = new JLabel("", JLabel.CENTER);
+		String s = ds.getName() + "<br>";
+		s += "单词总数：" + ds.getTotalLength() + "<br>";
+		s += "已经背诵：" + ds.getRecitedCount() + "<br>";
+		s += "正确数目：" + ds.getCorrectCount() + "<br>";
+		s += "错误数目：" + ds.getIncorrectCount() + "<br>";
+		s += "正确率：&nbsp;&nbsp;&nbsp;" + ds.getAccuracy() + "<br>";
+		s = "<html>" + s + "</html>";
+		jl.setText(s);
+		jl.setFont((new java.awt.Font("Dialog", 0, 18)));
+		jp1.setLayout(new BorderLayout());
+		jp1.add(jl, BorderLayout.CENTER);
+		welcome.add(jp1);
+
+		// 显示首字母候选
+		jp = new JPanel();
+		jp.setLayout(new GridLayout(3, 1, 30, 30));
+
+		for (char i = 'a'; i <= 'z'; i++) {
+			initialLetterList.addItem(i + "");
+		}
+		
+		initialLetterList.setSelectedIndex(0);
+
+		jp.add(initialLetterList);
+		jp.add(initialLetterSubmit);
+		welcome.add(jp);
+		repaint();
+		validate();
+	}
+
+	public void dictPieceChosenView(DictionaryStatus ds) {
 		welcome.removeAll();
 
 		// 显示统计信息
@@ -190,6 +226,22 @@ public class Displayer extends JFrame {
 		repaint();
 		validate();
 	}
+	
+	public char getSelectedInitialLetter(){
+		return ((String)(initialLetterList.getSelectedItem())).charAt(0);
+	}
+	
+	public JButton getInitialLetterSubmit(){
+		return initialLetterSubmit;
+	}
+
+	public JMenuItem getBarMenuItem() {
+		return menuBar.bar;
+	}
+
+	public JMenuItem getPieMenuItem() {
+		return menuBar.pie;
+	}
 
 	public JButton getExitButton() {
 		return jbExit;
@@ -205,14 +257,6 @@ public class Displayer extends JFrame {
 
 	public JMenuItem getChooseMenuItem() {
 		return menuBar.choosen;
-	}
-
-	public JMenuItem getBarMenuItem() {
-		return menuBar.bar;
-	}
-
-	public JMenuItem getPieMenuItem() {
-		return menuBar.pie;
 	}
 
 	public JMenuItem getHelpMenuItem() {
@@ -260,10 +304,6 @@ public class Displayer extends JFrame {
 	}
 
 	private class ImageCanvas extends JPanel {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
 		ImageIcon imageIcon = new ImageIcon("word.png");
 		Image image = imageIcon.getImage();
 
@@ -274,10 +314,6 @@ public class Displayer extends JFrame {
 
 	private class MyMenuBar extends JMenuBar {
 
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
 		JMenu option;
 		JMenuItem choosen;
 		JMenuItem exit;
@@ -313,7 +349,7 @@ public class Displayer extends JFrame {
 			ImageIcon doc1 = new ImageIcon("doc.png");
 			doc.setIcon(doc1);
 
-			chart = new JMenu("图标统计");
+			chart = new JMenu("图表统计");
 			bar = new JMenuItem("柱状图");
 			ImageIcon bar1 = new ImageIcon("bar.png");
 			bar.setIcon(bar1);

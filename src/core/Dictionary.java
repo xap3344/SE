@@ -27,7 +27,6 @@ public class Dictionary {
 			return null;
 	}
 
-	/* 文档中没有提到 */
 	public int getIndexByWord(String word) {
 		for (int i = 0; i < allWords.size(); i++) {
 			if (allWords.get(i).getWord().equals(word))
@@ -72,7 +71,8 @@ public class Dictionary {
 	}
 
 	public double getAccuracy() {
-		return ((int) ((sumCorrectCounts() * 1.0 / (sumCorrectCounts() + sumIncorrectCounts())) * 1000)) * 1.0 / 1000;
+		return ((int)((sumCorrectCounts() * 1.0
+				/ (sumCorrectCounts() + sumIncorrectCounts()))*1000))*1.0/1000;
 	}
 
 	public DictionaryStatus getDictionaryStatus() {
@@ -80,5 +80,4 @@ public class Dictionary {
 				sumCorrectCounts(), sumIncorrectCounts(), sumRecitedCounts(),
 				getAccuracy());
 	}
-
 }

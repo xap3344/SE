@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -15,6 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import core.DictionaryStatus;
 import core.Reciter;
+import java.util.ArrayList;
 
 public class Controler {
 	private Displayer frame = new Displayer();
@@ -31,15 +31,13 @@ public class Controler {
 		frame.getChooseButton().addActionListener(onChoose);
 		frame.getChooseMenuItem().addActionListener(onChoose);
 
-		/* 为图标操作增加ActionListener */
-		ActionListener bar = new BarListener();
-		ActionListener pie = new PieListener();
-		frame.getBarMenuItem().addActionListener(bar);
-		frame.getPieMenuItem().addActionListener(pie);
-
 		/* 为帮助操作增加ActionListener */
 		ActionListener onHelp = new HelpListener();
 		frame.getHelpMenuItem().addActionListener(onHelp);
+
+		/* 为首字母提交操作增加ActionListener */
+		ActionListener onSubmitInitialLetter = new SumitInitialLetterListener();
+		frame.getInitialLetterSubmit().addActionListener(onSubmitInitialLetter);
 
 		/* 为选择开始单词的各种操作增加ActionListener */
 		ActionListener onFirst = new FirstListener();
@@ -54,6 +52,12 @@ public class Controler {
 		ActionListener onSubmit = new SubmitListener();
 		frame.getJTC().addKeyListener(onShowAlternative);
 		frame.getSubmitButton().addActionListener(onSubmit);
+
+		/* 为图标操作增加ActionListener */
+		ActionListener bar = new BarListener();
+		ActionListener pie = new PieListener();
+		frame.getBarMenuItem().addActionListener(bar);
+		frame.getPieMenuItem().addActionListener(pie);
 
 		/* 为提交背单词数目操作增加ActionListener */
 		ActionListener onStart = new StartListener();
@@ -74,10 +78,17 @@ public class Controler {
 			arr2.add("正确总数");
 			arr2.add("错误总数");
 
-			arr1.add((float) r.getDictStatus().getTotalLength());
-			arr1.add((float) r.getDictStatus().getRecitedCount());
-			arr1.add((float) r.getDictStatus().getCorrectCount());
-			arr1.add((float) r.getDictStatus().getIncorrectCount());
+			if (r.getChosenInitial() != '0') {
+				arr1.add((float) r.getDictStatus().getTotalLength());
+				arr1.add((float) r.getDictStatus().getRecitedCount());
+				arr1.add((float) r.getDictStatus().getCorrectCount());
+				arr1.add((float) r.getDictStatus().getIncorrectCount());
+			} else {
+				arr1.add((float) r.getAllDictStatus().getTotalLength());
+				arr1.add((float) r.getAllDictStatus().getRecitedCount());
+				arr1.add((float) r.getAllDictStatus().getCorrectCount());
+				arr1.add((float) r.getAllDictStatus().getIncorrectCount());
+			}
 			@SuppressWarnings("unused")
 			Chart chart = new Chart(0, arr1, arr2);
 		}
@@ -91,8 +102,13 @@ public class Controler {
 			arr2.add("正确总数");
 			arr2.add("错误总数");
 
-			arr1.add((float) r.getDictStatus().getCorrectCount());
-			arr1.add((float) r.getDictStatus().getIncorrectCount());
+			if (r.getChosenInitial() != '0') {
+				arr1.add((float) r.getDictStatus().getCorrectCount());
+				arr1.add((float) r.getDictStatus().getIncorrectCount());
+			} else {
+				arr1.add((float) r.getAllDictStatus().getCorrectCount());
+				arr1.add((float) r.getAllDictStatus().getIncorrectCount());
+			}
 			@SuppressWarnings("unused")
 			Chart chart = new Chart(1, arr1, arr2);
 		}
@@ -101,6 +117,7 @@ public class Controler {
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			r.updateToFile();
 			System.exit(0);
 		}
 	}
@@ -116,7 +133,7 @@ public class Controler {
 			if (result == JFileChooser.APPROVE_OPTION) {
 				String myPath = jfc.getSelectedFile().getPath();
 				r.initializeDictionary(myPath);
-				frame.dictChosenView(r.getDictStatus());
+				frame.dictFileChosenView(r.getAllDictStatus());
 				frame.getPieMenuItem().setEnabled(true);
 				frame.getBarMenuItem().setEnabled(true);
 			}
@@ -137,6 +154,13 @@ public class Controler {
 		}
 	}
 
+	private class AnyListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+		}
+	}
+
 	private class FirstListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -153,10 +177,12 @@ public class Controler {
 		}
 	}
 
-	private class AnyListener implements ActionListener {
+	private class SumitInitialLetterListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			frame.enterCustomWordView();
+			char initial = frame.getSelectedInitialLetter();
+			r.choosePieceWithInitial(initial);
+			frame.dictPieceChosenView(r.getDictStatus());
 		}
 	}
 
@@ -211,8 +237,9 @@ public class Controler {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String spelling = frame.getJtf1().getText();
-			if (!r.testMatching(spelling)) {
-				JOptionPane.showMessageDialog(null, "错！背对为止重新来！", "",
+			String ans = r.testMatching(spelling);
+			if (ans != null) {
+				JOptionPane.showMessageDialog(null, "错！应该是" + ans, "",
 						JOptionPane.WARNING_MESSAGE);
 			}
 			String nextMeaning = r.showMeaningOfCurrentWord();

@@ -37,6 +37,12 @@ public class DictionaryStatus {
 
 	public double getAccuracy() {
 		return accuracy;
-	}	
-	
+	}
+
+	public String toString() {
+		return "词库名：" + getName() + "\n词条数目" + getTotalLength() + "\n正确数目"
+				+ getCorrectCount() + "\n错误数目" + getIncorrectCount()+"\n背诵数目"+getRecitedCount() + "\n正确率"
+				+ getAccuracy();
+	}
+
 }
