@@ -85,6 +85,25 @@ public class MyAction implements ActionListener {
 					+ "\n正确：" + s.getRightnum() + "\n错误：" + s.getWrongnum()
 					+ "\n正确率:" + (float) s.getRightnum() / s.getWordnum() * 100
 					+ "%", "", JOptionPane.INFORMATION_MESSAGE);
+			frame.welcome.removeAll();
+			frame.welcome.add(frame.ca);
+			JButton jbFirst = new JButton("从第一个单词开始");
+			jbFirst.addActionListener(new MyAction(frame));
+
+			JButton jbLast = new JButton("从上次结束单词开始");
+			jbLast.addActionListener(new MyAction(frame));
+
+			JButton jbAny = new JButton("选择开始单词");
+			jbAny.addActionListener(new MyAction(frame));
+
+			frame.jp = new JPanel();
+			frame.jp.setLayout(new GridLayout(3, 1, 30, 30));
+			frame.jp.add(jbFirst);
+			frame.jp.add(jbLast);
+			frame.jp.add(jbAny);
+			frame.welcome.add(frame.jp);
+			frame.repaint();
+			frame.validate();
 
 		}
 	}
@@ -138,24 +157,29 @@ public class MyAction implements ActionListener {
 			startWord = h.getFirstWord();
 		else
 			startWord = h.getLastWord();
+		if (h.getIndexForWord(startWord) != -1) {
+			frame.welcome.removeAll();
+			frame.welcome.add(frame.ca);
 
-		frame.welcome.removeAll();
-		frame.welcome.add(frame.ca);
+			frame.jp = new JPanel();
+			frame.jp.setLayout(new GridLayout(3, 1, 20, 40));
 
-		frame.jp = new JPanel();
-		frame.jp.setLayout(new GridLayout(3, 1, 20, 40));
+			JLabel jl = new JLabel("请输入要背诵的单词数目：");
+			jtf = new JTextField();
+			JButton jb = new JButton("开始背诵");
+			jb.addActionListener(new MyAction(frame));
+			frame.jp.add(jl);
+			frame.jp.add(jtf);
+			frame.jp.add(jb);
 
-		JLabel jl = new JLabel("请输入要背诵的单词数目：");
-		jtf = new JTextField();
-		JButton jb = new JButton("开始背诵");
-		jb.addActionListener(new MyAction(frame));
-		frame.jp.add(jl);
-		frame.jp.add(jtf);
-		frame.jp.add(jb);
+			frame.welcome.add(frame.jp);
+			frame.repaint();
+			frame.validate();
+		} else {
+			JOptionPane.showMessageDialog(null, "输入正确的单词", "",
+					JOptionPane.WARNING_MESSAGE);
+		}
 
-		frame.welcome.add(frame.jp);
-		frame.repaint();
-		frame.validate();
 	}
 
 	// 从选择的任意单词开始背诵单词
@@ -214,45 +238,49 @@ public class MyAction implements ActionListener {
 			myPath = jfc.getSelectedFile().getPath();
 			h = new Helper(myPath);
 		}
-		frame.welcome.remove(frame.jp);
-		frame.welcome.remove(frame.ca);
-		frame.welcome.removeAll();
 
-		// 显示统计信息
-		JPanel jp1 = new JPanel();
-		JLabel jl = new JLabel("", JLabel.CENTER);
-		String s = new String();
-		s += "词          库："
-				+ h.dicName.substring(h.dicName.lastIndexOf("\\") + 1) + "<br>";
-		s += "已经背诵：" + h.getRecited() + "<br>";
-		s += "正确数目：" + h.getRight() + "<br>";
-		s += "错误数目：" + h.getWrong() + "<br>";
-		s += "正确率：&nbsp;&nbsp;&nbsp;" + h.getRightRatePercent() + "<br>";
-		s = "<html>" + s + "</html>";
-		jl.setText(s);
-		jl.setFont((new java.awt.Font("Dialog", 0, 18)));
-		jp1.setLayout(new BorderLayout());
-		jp1.add(jl, BorderLayout.CENTER);
-		frame.welcome.add(jp1);
+		if (myPath != null) {
+			frame.welcome.remove(frame.jp);
+			frame.welcome.remove(frame.ca);
+			frame.welcome.removeAll();
 
-		// 显示开始背诵选项
-		JButton jbFirst = new JButton("从第一个单词开始");
-		jbFirst.addActionListener(new MyAction(frame));
+			// 显示统计信息
+			JPanel jp1 = new JPanel();
+			JLabel jl = new JLabel("", JLabel.CENTER);
+			String s = new String();
+			s += "词          库："
+					+ h.dicName.substring(h.dicName.lastIndexOf("\\") + 1)
+					+ "<br>";
+			s += "已经背诵：" + h.getRecited() + "<br>";
+			s += "正确数目：" + h.getRight() + "<br>";
+			s += "错误数目：" + h.getWrong() + "<br>";
+			s += "正确率：&nbsp;&nbsp;&nbsp;" + h.getRightRatePercent() + "<br>";
+			s = "<html>" + s + "</html>";
+			jl.setText(s);
+			jl.setFont((new java.awt.Font("Dialog", 0, 18)));
+			jp1.setLayout(new BorderLayout());
+			jp1.add(jl, BorderLayout.CENTER);
+			frame.welcome.add(jp1);
 
-		JButton jbLast = new JButton("从上次结束单词开始");
-		jbLast.addActionListener(new MyAction(frame));
+			// 显示开始背诵选项
+			JButton jbFirst = new JButton("从第一个单词开始");
+			jbFirst.addActionListener(new MyAction(frame));
 
-		JButton jbAny = new JButton("选择开始单词");
-		jbAny.addActionListener(new MyAction(frame));
+			JButton jbLast = new JButton("从上次结束单词开始");
+			jbLast.addActionListener(new MyAction(frame));
 
-		frame.jp = new JPanel();
-		frame.jp.setLayout(new GridLayout(3, 1, 30, 30));
-		frame.jp.add(jbFirst);
-		frame.jp.add(jbLast);
-		frame.jp.add(jbAny);
-		frame.welcome.add(frame.jp);
-		frame.repaint();
-		frame.validate();
+			JButton jbAny = new JButton("选择开始单词");
+			jbAny.addActionListener(new MyAction(frame));
+
+			frame.jp = new JPanel();
+			frame.jp.setLayout(new GridLayout(3, 1, 30, 30));
+			frame.jp.add(jbFirst);
+			frame.jp.add(jbLast);
+			frame.jp.add(jbAny);
+			frame.welcome.add(frame.jp);
+			frame.repaint();
+			frame.validate();
+		}
 
 	}
 
