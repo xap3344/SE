@@ -298,18 +298,4 @@ public class Reciter {
 
 		return null;
 	}
-
-	public static void main(String[] args) {
-		Reciter r = new Reciter();
-		r.initializeDictionary("C:/Users/Xill/Documents/dictionary.txt");
-		/*
-		r.choosePieceWithInitial('a');
-		r.setStartingIndexToFirstWord();
-		r.setReciteCount(2);
-		r.testMatching("abandon");
-		r.testMatching("bachelor");
-		r.updateToFile();*/
-		System.out.println(r.getAllDictStatus());
-	}
-
 }

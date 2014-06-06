@@ -117,7 +117,7 @@ public class Controler {
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			r.updateToFile();
+			//r.updateToFile();
 			System.exit(0);
 		}
 	}
