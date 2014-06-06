@@ -117,7 +117,8 @@ public class Controler {
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			//r.updateToFile();
+			if (r.getDicPath() != null)
+				r.updateToFile();
 			System.exit(0);
 		}
 	}

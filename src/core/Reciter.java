@@ -217,11 +217,15 @@ public class Reciter {
 		}
 	}
 
+	public String getDicPath() {
+		return dicPath;
+	}
+
 	public DictionaryStatus getRecitationStatus() {
 		return wordsToBeRecited.getDictionaryStatus();
 	}
-	
-	public char getChosenInitial(){
+
+	public char getChosenInitial() {
 		return initialChosen;
 	}
 
