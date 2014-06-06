@@ -72,8 +72,7 @@ public class Dictionary {
 	}
 
 	public double getAccuracy() {
-		return ((int)((sumCorrectCounts() * 1.0
-				/ (sumCorrectCounts() + sumIncorrectCounts()))*1000))*1.0/1000;
+		return ((int) ((sumCorrectCounts() * 1.0 / (sumCorrectCounts() + sumIncorrectCounts())) * 1000)) * 1.0 / 1000;
 	}
 
 	public DictionaryStatus getDictionaryStatus() {
@@ -81,4 +80,5 @@ public class Dictionary {
 				sumCorrectCounts(), sumIncorrectCounts(), sumRecitedCounts(),
 				getAccuracy());
 	}
+
 }

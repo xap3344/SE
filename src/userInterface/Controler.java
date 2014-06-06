@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -29,6 +30,12 @@ public class Controler {
 		ActionListener onChoose = new ChooseListener();
 		frame.getChooseButton().addActionListener(onChoose);
 		frame.getChooseMenuItem().addActionListener(onChoose);
+
+		/* 为图标操作增加ActionListener */
+		ActionListener bar = new BarListener();
+		ActionListener pie = new PieListener();
+		frame.getBarMenuItem().addActionListener(bar);
+		frame.getPieMenuItem().addActionListener(pie);
 
 		/* 为帮助操作增加ActionListener */
 		ActionListener onHelp = new HelpListener();
@@ -57,6 +64,40 @@ public class Controler {
 		frame.getNext().addActionListener(onNext);
 	}
 
+	private class BarListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ArrayList<Float> arr1 = new ArrayList<Float>();
+			ArrayList<String> arr2 = new ArrayList<String>();
+			arr2.add("单词总数");
+			arr2.add("已背总数");
+			arr2.add("正确总数");
+			arr2.add("错误总数");
+
+			arr1.add((float) r.getDictStatus().getTotalLength());
+			arr1.add((float) r.getDictStatus().getRecitedCount());
+			arr1.add((float) r.getDictStatus().getCorrectCount());
+			arr1.add((float) r.getDictStatus().getIncorrectCount());
+			@SuppressWarnings("unused")
+			Chart chart = new Chart(0, arr1, arr2);
+		}
+	}
+
+	private class PieListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ArrayList<Float> arr1 = new ArrayList<Float>();
+			ArrayList<String> arr2 = new ArrayList<String>();
+			arr2.add("正确总数");
+			arr2.add("错误总数");
+
+			arr1.add((float) r.getDictStatus().getCorrectCount());
+			arr1.add((float) r.getDictStatus().getIncorrectCount());
+			@SuppressWarnings("unused")
+			Chart chart = new Chart(1, arr1, arr2);
+		}
+	}
+
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -76,6 +117,8 @@ public class Controler {
 				String myPath = jfc.getSelectedFile().getPath();
 				r.initializeDictionary(myPath);
 				frame.dictChosenView(r.getDictStatus());
+				frame.getPieMenuItem().setEnabled(true);
+				frame.getBarMenuItem().setEnabled(true);
 			}
 		}
 	}
