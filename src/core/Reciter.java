@@ -58,6 +58,9 @@ public class Reciter {
 
 	public void choosePieceWithInitial(char initial) {
 		initialChosen = initial;
+		startingIndexInDict = -1;
+		currentIndexInWordsToBeRecited = 0;
+
 		Scanner scanner;
 		try {
 			File dicFile = new File(dicPathWithoutExtension + "-"
@@ -100,8 +103,9 @@ public class Reciter {
 		return dict.getDictionaryStatus();
 	}
 
-	public DictionaryStatus getAllDictStatus() {
+	public DictionaryStatus[] getAllDictStatus() {
 		Dictionary[] dictPiece = new Dictionary[26];
+		DictionaryStatus[] dictPieceStatus = new DictionaryStatus[27];
 		int totalLengthAll = 0, correctCountAll = 0, incorrectCountAll = 0, recitedCountAll = 0;
 
 		for (char i = 'a'; i <= 'z'; i++) {
@@ -140,18 +144,27 @@ public class Reciter {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-
-			totalLengthAll += dictPiece[i - 'a'].getDicLength();
-			correctCountAll += dictPiece[i - 'a'].sumCorrectCounts();
-			incorrectCountAll += dictPiece[i - 'a'].sumIncorrectCounts();
-			recitedCountAll += dictPiece[i - 'a'].sumRecitedCounts();
+			
+			int tempDicLength = dictPiece[i - 'a'].getDicLength();
+			int tempCorrectCount = dictPiece[i - 'a'].sumCorrectCounts();
+			int tempIncorrectCount = dictPiece[i - 'a'].sumIncorrectCounts();
+			int tempRecitedCount = dictPiece[i - 'a'].sumRecitedCounts();
+			double tempAccuracy = ((int) ((tempCorrectCount * 1.0 / (tempCorrectCount + tempIncorrectCount)) * 1000)) * 1.0 / 1000;
+			
+			dictPieceStatus[i-'a'] = new DictionaryStatus(""+i, tempDicLength, tempCorrectCount, tempIncorrectCount, tempRecitedCount, tempAccuracy);
+			
+			totalLengthAll += tempDicLength;
+			correctCountAll += tempCorrectCount;
+			incorrectCountAll += tempIncorrectCount;
+			recitedCountAll += tempRecitedCount;
 
 		}
 
 		double accuracyAll = ((int) ((correctCountAll * 1.0 / (correctCountAll + incorrectCountAll)) * 1000)) * 1.0 / 1000;
 
-		return new DictionaryStatus("×Ü´Ê¿â", totalLengthAll, correctCountAll,
+		dictPieceStatus[26]=new DictionaryStatus("Total", totalLengthAll, correctCountAll,
 				incorrectCountAll, recitedCountAll, accuracyAll);
+		return dictPieceStatus;
 	}
 
 	public boolean setStartingIndexByWord(String word) {
@@ -178,7 +191,7 @@ public class Reciter {
 
 		boolean ret = false;
 		int maxIndex = dict.getDicLength() - 1;
-		if (startingIndexInDict + reciteCount - 1 < maxIndex) {
+		if (startingIndexInDict + reciteCount - 1 <= maxIndex) {
 			maxIndex = startingIndexInDict + reciteCount - 1;
 			ret = true;
 		}
@@ -217,11 +230,15 @@ public class Reciter {
 		}
 	}
 
+	public String getDicPath() {
+		return dicPath;
+	}
+
 	public DictionaryStatus getRecitationStatus() {
 		return wordsToBeRecited.getDictionaryStatus();
 	}
-	
-	public char getChosenInitial(){
+
+	public char getChosenInitial() {
 		return initialChosen;
 	}
 
@@ -298,18 +315,4 @@ public class Reciter {
 
 		return null;
 	}
-
-	public static void main(String[] args) {
-		Reciter r = new Reciter();
-		r.initializeDictionary("C:/Users/Xill/Documents/dictionary.txt");
-		/*
-		r.choosePieceWithInitial('a');
-		r.setStartingIndexToFirstWord();
-		r.setReciteCount(2);
-		r.testMatching("abandon");
-		r.testMatching("bachelor");
-		r.updateToFile();*/
-		System.out.println(r.getAllDictStatus());
-	}
-
 }

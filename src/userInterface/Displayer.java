@@ -2,6 +2,8 @@ package userInterface;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -23,6 +25,17 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.general.DefaultKeyedValues2DDataset;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.KeyedValues2DDataset;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
 
 import core.DictionaryStatus;
 
@@ -49,14 +62,14 @@ public class Displayer extends JFrame {
 	private JTextComponent jtc = (JTextComponent) (bar.getEditor()
 			.getEditorComponent());
 
-	private JComboBox<String> initialLetterList = new JComboBox<String>();
+	private JComboBox<String> initialLetterList;
 	private JButton initialLetterSubmit = new JButton("选择该词库");
 
 	private JTextField jtf, jtf1;
 
 	public Displayer() {
 		init();
-		entranceView();
+	//	entranceView();
 	}
 
 	public void init() {
@@ -108,7 +121,7 @@ public class Displayer extends JFrame {
 
 	public void dictFileChosenView(DictionaryStatus ds) {
 		welcome.removeAll();
-
+		welcome.setLayout(new GridLayout(1, 2, 5, 5));
 		// 显示统计信息
 		JPanel jp1 = new JPanel();
 		JLabel jl = new JLabel("", JLabel.CENTER);
@@ -128,7 +141,9 @@ public class Displayer extends JFrame {
 		// 显示首字母候选
 		jp = new JPanel();
 		jp.setLayout(new GridLayout(3, 1, 30, 30));
-
+		
+		
+		initialLetterList = new JComboBox<String>();
 		for (char i = 'a'; i <= 'z'; i++) {
 			initialLetterList.addItem(i + "");
 		}
@@ -239,8 +254,8 @@ public class Displayer extends JFrame {
 		return menuBar.bar;
 	}
 
-	public JMenuItem getPieMenuItem() {
-		return menuBar.pie;
+	public JMenuItem getPieMenuItem(int i) {
+		return menuBar.pieOptions[i];
 	}
 
 	public JButton getExitButton() {
@@ -255,9 +270,10 @@ public class Displayer extends JFrame {
 		return jbChoose;
 	}
 
+	/*
 	public JMenuItem getChooseMenuItem() {
 		return menuBar.choosen;
-	}
+	}*/
 
 	public JMenuItem getHelpMenuItem() {
 		return menuBar.doc;
@@ -315,7 +331,7 @@ public class Displayer extends JFrame {
 	private class MyMenuBar extends JMenuBar {
 
 		JMenu option;
-		JMenuItem choosen;
+		//JMenuItem choosen;
 		JMenuItem exit;
 
 		JMenu help;
@@ -323,7 +339,8 @@ public class Displayer extends JFrame {
 
 		JMenu chart;
 		JMenuItem bar;
-		JMenuItem pie;
+		JMenu pie;
+		JMenuItem[] pieOptions = new JMenuItem[28];
 
 		public MyMenuBar() {
 
@@ -335,10 +352,10 @@ public class Displayer extends JFrame {
 				e.printStackTrace();
 			}
 			option = new JMenu("选项");
-			choosen = new JMenuItem("选择词库");
-			choosen.setBackground(Color.WHITE);
-			ImageIcon dic = new ImageIcon("dic.png");
-			choosen.setIcon(dic);
+		//	choosen = new JMenuItem("选择词库");
+		//	choosen.setBackground(Color.WHITE);
+		//	ImageIcon dic = new ImageIcon("dic.png");
+		//	choosen.setIcon(dic);
 			exit = new JMenuItem("退出");
 			ImageIcon exit1 = new ImageIcon("exit.png");
 			exit.setIcon(exit1);
@@ -349,19 +366,28 @@ public class Displayer extends JFrame {
 			ImageIcon doc1 = new ImageIcon("doc.png");
 			doc.setIcon(doc1);
 
-			chart = new JMenu("图标统计");
+			chart = new JMenu("图表统计");
 			bar = new JMenuItem("柱状图");
 			ImageIcon bar1 = new ImageIcon("bar.png");
 			bar.setIcon(bar1);
-			bar.setEnabled(false);
-			pie = new JMenuItem("饼图");
+			pie = new JMenu("饼图");
 			ImageIcon pie1 = new ImageIcon("pie.png");
 			pie.setIcon(pie1);
-			pie.setEnabled(false);
-
+			
+			pieOptions[0] = new JMenuItem("当前词库");
+			pieOptions[0].setEnabled(false);
+			pie.add(pieOptions[0]);
+			pieOptions[1] = new JMenuItem("所有词库");
+			pie.add(pieOptions[1]);
+			pie.addSeparator();
+			for(int i = 2; i <28;i++){
+				pieOptions[i] = new JMenuItem((char)('a'-2+i)+"");
+				pie.add(pieOptions[i]);
+			}
+			
 			add(option);
-			option.add(choosen);
-			option.addSeparator();
+		//	option.add(choosen);
+		//	option.addSeparator();
 			option.add(exit);
 
 			add(help);
@@ -377,174 +403,68 @@ public class Displayer extends JFrame {
 	}
 }
 
-class Chart extends JFrame {
+class DictBar extends JFrame {
 
-	private static final long serialVersionUID = 1L;
+	public DictBar(DictionaryStatus[] ds) {
+		super("全部词库中已背单词数量及正确率图");
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		KeyedValues2DDataset keyedvalues2ddataset = createDataset(ds);
+		JFreeChart chart = ChartFactory.createStackedBarChart(
+				"全部词库中已背单词数量及正确率图", "词库",
+				"正确率                                             已背单词数",
+				keyedvalues2ddataset, PlotOrientation.HORIZONTAL, true, true,
+				false);
 
-	public Chart(int i, ArrayList<Float> arr1, ArrayList<String> arr2) {
-		this.setSize(800, 600);
-		this.setTitle("统计图表");
-		this.setLocationRelativeTo(null);
-		this.setVisible(true);
-		this.setResizable(false);
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		MyPanel panel = new MyPanel(i, arr1, arr2);
-		panel.setHistogramTitle("单词数目（个）", "类别");
-		this.add(panel);
+		Font defaultFont = new Font("宋体", Font.BOLD, 15);// 将字体设置为支持中文的字体
+		chart.getCategoryPlot().getRangeAxis().setLabelFont(defaultFont);// 设置Y轴标识字体
+		chart.getCategoryPlot().getDomainAxis().setLabelFont(defaultFont);// 设置X轴标识字体
+		chart.getLegend().setItemFont(defaultFont);// 设置图例说明字体
+		chart.getTitle().setFont(defaultFont);// 设置标题字体
+
+		ChartPanel chartpanel = new ChartPanel(chart);
+		chartpanel.setPreferredSize(new Dimension(640, 640));
+		setContentPane(chartpanel);
+	}
+
+	private KeyedValues2DDataset createDataset(DictionaryStatus[] ds) {
+		DefaultKeyedValues2DDataset defaultkeyedvalues2ddataset = new DefaultKeyedValues2DDataset();
+		for(int i =0;i<27;i++){
+			DictionaryStatus tempStatus = ds[i];
+			defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy()*(-1), "正确率", tempStatus.getName());
+			defaultkeyedvalues2ddataset.addValue(tempStatus.getRecitedCount(), "已背单词数", tempStatus.getName());
+		}
+		return defaultkeyedvalues2ddataset;
 	}
 }
 
-class MyPanel extends JPanel {
+class DictPie extends JFrame {
 
-	private static final long serialVersionUID = 1L;
-
-	public MyPanel(int type, ArrayList<Float> arr1, ArrayList<String> arr2) {
-		elem.clear();
-		value.clear();
-		for (int i = 0; i < Math.min(arr1.size(), arr2.size()); i++) {
-			MyPanel.insert(arr2.get(i), arr1.get(i));
-		}
-		if (type == 0)
-			flag = true;
-		else
-			flag = false;
+	public DictPie(DictionaryStatus ds) {
+		super(ds.getName());
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setContentPane(createDemoPanel(ds));
 	}
 
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		g.clearRect(0, 0, 800, 600);
-		if (flag)
-			drawHistogram(g);
-		else
-			drawCaky(g);
-	}
+	public static JPanel createDemoPanel(DictionaryStatus ds) {
+		JPanel jpanel = new JPanel(new GridLayout(1, 2));
+		DefaultPieDataset count1 = new DefaultPieDataset();
+		count1.setValue("Correct", ds.getCorrectCount());
+		count1.setValue("Incorrect", ds.getIncorrectCount());
 
-	public static void insert(String aElem, float aValue) {
-		elem.add(aElem);
-		value.add(aValue);
-	}
+		DefaultPieDataset count2 = new DefaultPieDataset();
+		count2.setValue("Recited", ds.getRecitedCount());
+		count2.setValue("Total", ds.getTotalLength());
 
-	// 画柱状图
-	public void drawHistogram(Graphics g) {
-		g.setColor(Color.BLACK);
-		g.drawString("柱状图", SIZE + 200, 30);
-		g.setColor(Color.GREEN);
-		// 竖线
-		g.drawLine(SIZE, 600 - SIZE, SIZE, SIZE);
-		// 横线
-		g.drawLine(SIZE, 600 - SIZE, 800 - SIZE, 600 - SIZE);
-		// 箭头
-		g.setColor(Color.RED);
-		int[] x1 = { SIZE - 6, SIZE, SIZE + 6 };
-		int[] y1 = { SIZE + 8, SIZE, SIZE + 8 };
-		g.drawPolyline(x1, y1, 3);
-		int[] x2 = { 800 - SIZE - 8, 800 - SIZE, 800 - SIZE - 8 };
-		int[] y2 = { 600 - SIZE - 6, 600 - SIZE, 600 - SIZE + 6 };
-		g.drawPolyline(x2, y2, 3);
-		// title
-		g.drawString(this.yTitle, SIZE - 20, SIZE - 6);
-		g.drawString(this.xTitle, 800 - SIZE - 20, 600 - SIZE + 20);
-		// 动态计算每个柱状图的宽
-		int wigth = (int) ((800 - 3 * SIZE) / (value.size() * 2));
-		// 取数据中的最大值
-		float max = 0;
-		for (Float elem : value) {
-			if (max < elem.intValue()) {
-				max = elem.intValue();
-			}
-		}
-		// 按比例计算高度
-		double num = (double) (600 - 2 * (SIZE + 10)) / (double) max;
-		// 画出每个柱状图
-		for (int i = 0; i < elem.size(); i++) {
-			int height = (int) (value.get(i) * num);
-			// g.drawRect(wigth*(i*2+2),Main.HEIGHT-SIZE-height,wigth,height);
-			g.setColor(new java.awt.Color(Digit.getDigit(255), Digit
-					.getDigit(255), Digit.getDigit(255)));
-			// 填充颜色
-			g.fillRect(wigth * (i * 2 + 1) + SIZE, 600 - SIZE - height, wigth,
-					height);
-			g.setColor(Color.RED);
-			// 画出每项名字
-			g.drawString(Float.toString(value.get(i)), wigth * (i * 2 + 1)
-					+ SIZE, 600 - SIZE - 20 - height);
-			// 在横线上画出每项名字
-			g.drawString(elem.get(i), wigth * (i * 2 + 1) + SIZE,
-					600 - SIZE + 20);
-			// 在竖线上画出每项高度值
-			g.drawString(Float.toString(value.get(i)), SIZE - 40, 600 - SIZE
-					- height + 5);
-			// 在竖线上画出标识点
-			g.drawLine(SIZE, 600 - SIZE - height, SIZE + 3, 600 - SIZE - height);
-		}
-	}
-
-	// 画饼图
-	public void drawCaky(Graphics g) {
-		g.setColor(Color.BLUE);
-		int wigth = (int) ((800 - CAKY_WIDTH) / 2);
-		int height = (int) ((600 - CAKY_WIDTH) / 2);
-		g.drawOval(wigth, height, CAKY_WIDTH, CAKY_WIDTH);
-		g.drawString("饼图", (int) (800 / 2) - 30, height - 50);
-		int sum = 0;
-		for (Float elem : value) {
-			sum += elem.intValue();
-		}
-		double Test = 360d / sum;
-		int currentAngle = 0;
-		int half = (int) (CAKY_WIDTH + 50) / 2;
-		int xFlag = 1;
-		int yFlag = -1;
-		for (int i = 0; i < elem.size(); i++) {
-			int angle = (int) (Test * value.get(i).intValue() + 0.5);
-			g.setColor(new java.awt.Color(Digit.getDigit(255), Digit
-					.getDigit(255), Digit.getDigit(255)));
-			g.fillArc(wigth, height, CAKY_WIDTH, CAKY_WIDTH, currentAngle,
-					angle);
-			// 用于计算每个圆周的值
-			if (currentAngle > 90 && currentAngle < 181) {
-				xFlag = 1;
-				yFlag = -1;
-			} else if (currentAngle > 180 && currentAngle < 271) {
-				xFlag = 1;
-				yFlag = -1;
-			} else if (currentAngle > 270) {
-				xFlag = 1;
-				yFlag = -1;
-			}
-			// 计算每块的标识字符串坐标
-			int x = (int) (Math.cos((double) (currentAngle + angle / 2)
-					* Math.PI / 180)
-					* xFlag * half + wigth - 40 + half);
-			int y = (int) (Math.sin((double) (currentAngle + angle / 2)
-					* Math.PI / 180)
-					* yFlag * half + height - 20 + half);
-			g.drawString(elem.get(i), x, y);
-			currentAngle += angle;
-		}
-	}
-
-	public void setHistogramTitle(String y, String x) {
-		xTitle = x;
-		yTitle = y;
-	}
-
-	private boolean flag = true;
-	private final int SIZE = 100;
-	private final int CAKY_WIDTH = 400;
-	private String xTitle;
-	private String yTitle;
-	private static List<String> elem = new ArrayList<String>();
-	private static List<Float> value = new ArrayList<Float>();
-}
-
-class Digit {
-	public Digit() {
-	}
-
-	// 产生0-digit范围内的随机整数
-	public static int getDigit(int digit) {
-		java.util.Random ran = new Random();
-		return (int) (ran.nextDouble() * digit);
+		JFreeChart jfreechart = ChartFactory.createPieChart(
+				"Correct/Incorrect", count1, false, false, false);
+		PiePlot pieplot = (PiePlot) jfreechart.getPlot();
+		JFreeChart jfreechart1 = ChartFactory.createPieChart("Recited/Total",
+				count2, false, false, false);
+		PiePlot pieplot1 = (PiePlot) jfreechart1.getPlot();
+		jpanel.add(new ChartPanel(jfreechart));
+		jpanel.add(new ChartPanel(jfreechart1));
+		jpanel.setPreferredSize(new Dimension(640, 400));
+		return jpanel;
 	}
 }

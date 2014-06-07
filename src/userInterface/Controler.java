@@ -12,6 +12,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.jfree.ui.RefineryUtilities;
+
 import core.DictionaryStatus;
 import core.Reciter;
 import java.util.ArrayList;
@@ -21,15 +23,21 @@ public class Controler {
 	private Reciter r = new Reciter();
 
 	public Controler() {
+
+		r.initializeDictionary("dictionary.txt");
+		frame.dictFileChosenView(r.getAllDictStatus()[26]);
+
 		/* 为退出操作增加ActonListener */
 		ActionListener onExit = new ExitListener();
 		frame.getExitButton().addActionListener(onExit);
 		frame.getExitMenuItem().addActionListener(onExit);
 
 		/* 为选择词库操作增加ActionListener */
-		ActionListener onChoose = new ChooseListener();
-		frame.getChooseButton().addActionListener(onChoose);
-		frame.getChooseMenuItem().addActionListener(onChoose);
+		/*
+		 * ActionListener onChoose = new ChooseListener();
+		 * frame.getChooseButton().addActionListener(onChoose);
+		 * frame.getChooseMenuItem().addActionListener(onChoose);
+		 */
 
 		/* 为帮助操作增加ActionListener */
 		ActionListener onHelp = new HelpListener();
@@ -57,7 +65,8 @@ public class Controler {
 		ActionListener bar = new BarListener();
 		ActionListener pie = new PieListener();
 		frame.getBarMenuItem().addActionListener(bar);
-		frame.getPieMenuItem().addActionListener(pie);
+		for (int i = 0; i < 28; i++)
+			frame.getPieMenuItem(i).addActionListener(pie);
 
 		/* 为提交背单词数目操作增加ActionListener */
 		ActionListener onStart = new StartListener();
@@ -71,74 +80,57 @@ public class Controler {
 	private class BarListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ArrayList<Float> arr1 = new ArrayList<Float>();
-			ArrayList<String> arr2 = new ArrayList<String>();
-			arr2.add("单词总数");
-			arr2.add("已背总数");
-			arr2.add("正确总数");
-			arr2.add("错误总数");
-
-			if (r.getChosenInitial() != '0') {
-				arr1.add((float) r.getDictStatus().getTotalLength());
-				arr1.add((float) r.getDictStatus().getRecitedCount());
-				arr1.add((float) r.getDictStatus().getCorrectCount());
-				arr1.add((float) r.getDictStatus().getIncorrectCount());
-			} else {
-				arr1.add((float) r.getAllDictStatus().getTotalLength());
-				arr1.add((float) r.getAllDictStatus().getRecitedCount());
-				arr1.add((float) r.getAllDictStatus().getCorrectCount());
-				arr1.add((float) r.getAllDictStatus().getIncorrectCount());
-			}
-			@SuppressWarnings("unused")
-			Chart chart = new Chart(0, arr1, arr2);
+			DictBar c = new DictBar(r.getAllDictStatus());
+			c.pack();
+			RefineryUtilities.centerFrameOnScreen(c);
+			c.setVisible(true);
 		}
 	}
 
 	private class PieListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ArrayList<Float> arr1 = new ArrayList<Float>();
-			ArrayList<String> arr2 = new ArrayList<String>();
-			arr2.add("正确总数");
-			arr2.add("错误总数");
+			String from = e.getActionCommand();
+			DictionaryStatus ds;
+			if (from.length() == 1) {
+				ds = r.getAllDictStatus()[from.charAt(0) - 'a'];
 
-			if (r.getChosenInitial() != '0') {
-				arr1.add((float) r.getDictStatus().getCorrectCount());
-				arr1.add((float) r.getDictStatus().getIncorrectCount());
 			} else {
-				arr1.add((float) r.getAllDictStatus().getCorrectCount());
-				arr1.add((float) r.getAllDictStatus().getIncorrectCount());
+				if (from.equals("当前词库"))
+					ds = r.getDictStatus();
+				else
+					ds = r.getAllDictStatus()[26];
 			}
-			@SuppressWarnings("unused")
-			Chart chart = new Chart(1, arr1, arr2);
+
+			DictPie p = new DictPie(ds);
+			p.pack();
+			RefineryUtilities.centerFrameOnScreen(p);
+			p.setVisible(true);
 		}
 	}
 
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			r.updateToFile();
+			if (r.getDicPath() != null)
+				r.updateToFile();
 			System.exit(0);
 		}
 	}
 
-	private class ChooseListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			JFileChooser jfc = new JFileChooser();
-			FileNameExtensionFilter f = new FileNameExtensionFilter(
-					"*.txt(文本文档)", "txt");
-			jfc.setFileFilter(f);
-			int result = jfc.showOpenDialog(frame);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				String myPath = jfc.getSelectedFile().getPath();
-				r.initializeDictionary(myPath);
-				frame.dictFileChosenView(r.getAllDictStatus());
-				frame.getPieMenuItem().setEnabled(true);
-				frame.getBarMenuItem().setEnabled(true);
-			}
-		}
-	}
+	/*
+	 * private class ChooseListener implements ActionListener {
+	 * 
+	 * @Override public void actionPerformed(ActionEvent e) { JFileChooser jfc =
+	 * new JFileChooser(); FileNameExtensionFilter f = new
+	 * FileNameExtensionFilter( "*.txt(文本文档)", "txt"); jfc.setFileFilter(f); int
+	 * result = jfc.showOpenDialog(frame); if (result ==
+	 * JFileChooser.APPROVE_OPTION) { String myPath =
+	 * jfc.getSelectedFile().getPath(); r.initializeDictionary(myPath);
+	 * frame.dictFileChosenView(r.getAllDictStatus());
+	 * frame.getPieMenuItem().setEnabled(true);
+	 * frame.getBarMenuItem().setEnabled(true); } } }
+	 */
 
 	private class HelpListener implements ActionListener {
 		@Override
@@ -157,7 +149,7 @@ public class Controler {
 	private class AnyListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-
+			frame.enterCustomWordView();
 		}
 	}
 
@@ -183,6 +175,7 @@ public class Controler {
 			char initial = frame.getSelectedInitialLetter();
 			r.choosePieceWithInitial(initial);
 			frame.dictPieceChosenView(r.getDictStatus());
+			frame.getPieMenuItem(0).setEnabled(true);
 		}
 	}
 
@@ -254,7 +247,7 @@ public class Controler {
 								+ recStatus.getIncorrectCount() + "\n正确率:"
 								+ recStatus.getAccuracy(), "",
 						JOptionPane.INFORMATION_MESSAGE);
-				System.exit(0);
+				frame.dictFileChosenView(r.getAllDictStatus()[26]);
 			}
 		}
 	}
