@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.FileNotFoundException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -14,8 +15,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jfree.ui.RefineryUtilities;
 
-import core.DictionaryStatus;
+import interfaces.DictionaryStatus;
 import core.Reciter;
+
 import java.util.ArrayList;
 
 public class Controler {
@@ -64,7 +66,8 @@ public class Controler {
 		/* 为图标操作增加ActionListener */
 		ActionListener bar = new BarListener();
 		ActionListener pie = new PieListener();
-		frame.getBarMenuItem().addActionListener(bar);
+		frame.getBarRecitedMenuItem().addActionListener(bar);
+		frame.getBarAccuracyMenuItem().addActionListener(bar);
 		for (int i = 0; i < 28; i++)
 			frame.getPieMenuItem(i).addActionListener(pie);
 
@@ -80,10 +83,18 @@ public class Controler {
 	private class BarListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			DictBar c = new DictBar(r.getAllDictStatus());
-			c.pack();
-			RefineryUtilities.centerFrameOnScreen(c);
-			c.setVisible(true);
+			String from = e.getActionCommand();
+			if (from.equals("全部词库中已背单词数量图")) {
+				DictBarRecited c = new DictBarRecited(r.getAllDictStatus());
+				c.pack();
+				RefineryUtilities.centerFrameOnScreen(c);
+				c.setVisible(true);
+			} else if (from.equals("全部词库中已背单词正确率图")) {
+				DictBarAccuracy c = new DictBarAccuracy(r.getAllDictStatus());
+				c.pack();
+				RefineryUtilities.centerFrameOnScreen(c);
+				c.setVisible(true);
+			}
 		}
 	}
 
@@ -112,7 +123,7 @@ public class Controler {
 	private class ExitListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (r.getDicPath() != null)
+			if (r.getDicPath() != null && r.getWordsToBeRecited() != null)
 				r.updateToFile();
 			System.exit(0);
 		}
@@ -135,14 +146,12 @@ public class Controler {
 	private class HelpListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JFrame jf = new JFrame();
-			jf.setTitle("Word Master Help");
-			jf.setSize(400, 500);
-			Image icon = Toolkit.getDefaultToolkit().getImage("word.png");
-			jf.setIconImage(icon);
-			jf.setLocation(0, 0);
-			jf.setVisible(true);
-			jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			try {
+				frame.HelpDoc();
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
 

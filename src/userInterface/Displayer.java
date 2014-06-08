@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -37,7 +38,8 @@ import org.jfree.data.general.KeyedValues2DDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
-import core.DictionaryStatus;
+import interfaces.DictionaryStatus;
+import core.Reciter;
 
 public class Displayer extends JFrame {
 
@@ -69,7 +71,7 @@ public class Displayer extends JFrame {
 
 	public Displayer() {
 		init();
-	//	entranceView();
+		// entranceView();
 	}
 
 	public void init() {
@@ -141,13 +143,12 @@ public class Displayer extends JFrame {
 		// 显示首字母候选
 		jp = new JPanel();
 		jp.setLayout(new GridLayout(3, 1, 30, 30));
-		
-		
+
 		initialLetterList = new JComboBox<String>();
 		for (char i = 'a'; i <= 'z'; i++) {
 			initialLetterList.addItem(i + "");
 		}
-		
+
 		initialLetterList.setSelectedIndex(0);
 
 		jp.add(initialLetterList);
@@ -241,17 +242,21 @@ public class Displayer extends JFrame {
 		repaint();
 		validate();
 	}
-	
-	public char getSelectedInitialLetter(){
-		return ((String)(initialLetterList.getSelectedItem())).charAt(0);
+
+	public char getSelectedInitialLetter() {
+		return ((String) (initialLetterList.getSelectedItem())).charAt(0);
 	}
-	
-	public JButton getInitialLetterSubmit(){
+
+	public JButton getInitialLetterSubmit() {
 		return initialLetterSubmit;
 	}
 
-	public JMenuItem getBarMenuItem() {
-		return menuBar.bar;
+	public JMenuItem getBarRecitedMenuItem() {
+		return menuBar.barRecited;
+	}
+
+	public JMenuItem getBarAccuracyMenuItem() {
+		return menuBar.barAccuracy;
 	}
 
 	public JMenuItem getPieMenuItem(int i) {
@@ -271,9 +276,8 @@ public class Displayer extends JFrame {
 	}
 
 	/*
-	public JMenuItem getChooseMenuItem() {
-		return menuBar.choosen;
-	}*/
+	 * public JMenuItem getChooseMenuItem() { return menuBar.choosen; }
+	 */
 
 	public JMenuItem getHelpMenuItem() {
 		return menuBar.doc;
@@ -328,17 +332,36 @@ public class Displayer extends JFrame {
 		}
 	}
 
+	public void HelpDoc() throws FileNotFoundException {
+
+		JLabel jl = new JLabel(Reciter.readme(),JLabel.CENTER);
+		JFrame jf = new JFrame();
+
+		jf.setTitle("Word Master Help");
+		jf.setSize(400, 300);
+		Image icon = Toolkit.getDefaultToolkit().getImage("word.png");
+		jf.setIconImage(icon);
+		jf.setLocation(0, 0);
+		jf.setVisible(true);
+		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		jf.add(jl);
+
+	}
+
 	private class MyMenuBar extends JMenuBar {
 
 		JMenu option;
-		//JMenuItem choosen;
+		// JMenuItem choosen;
 		JMenuItem exit;
 
 		JMenu help;
 		JMenuItem doc;
 
 		JMenu chart;
-		JMenuItem bar;
+		JMenu bar;
+		JMenuItem barRecited;
+		JMenuItem barAccuracy;
+
 		JMenu pie;
 		JMenuItem[] pieOptions = new JMenuItem[28];
 
@@ -352,10 +375,10 @@ public class Displayer extends JFrame {
 				e.printStackTrace();
 			}
 			option = new JMenu("选项");
-		//	choosen = new JMenuItem("选择词库");
-		//	choosen.setBackground(Color.WHITE);
-		//	ImageIcon dic = new ImageIcon("dic.png");
-		//	choosen.setIcon(dic);
+			// choosen = new JMenuItem("选择词库");
+			// choosen.setBackground(Color.WHITE);
+			// ImageIcon dic = new ImageIcon("dic.png");
+			// choosen.setIcon(dic);
 			exit = new JMenuItem("退出");
 			ImageIcon exit1 = new ImageIcon("exit.png");
 			exit.setIcon(exit1);
@@ -367,27 +390,34 @@ public class Displayer extends JFrame {
 			doc.setIcon(doc1);
 
 			chart = new JMenu("图表统计");
-			bar = new JMenuItem("柱状图");
+			bar = new JMenu("柱状图");
 			ImageIcon bar1 = new ImageIcon("bar.png");
 			bar.setIcon(bar1);
+
+			barRecited = new JMenuItem("全部词库中已背单词数量图");
+			barAccuracy = new JMenuItem("全部词库中已背单词正确率图");
+
+			bar.add(barRecited);
+			bar.add(barAccuracy);
+
 			pie = new JMenu("饼图");
 			ImageIcon pie1 = new ImageIcon("pie.png");
 			pie.setIcon(pie1);
-			
+
 			pieOptions[0] = new JMenuItem("当前词库");
 			pieOptions[0].setEnabled(false);
 			pie.add(pieOptions[0]);
 			pieOptions[1] = new JMenuItem("所有词库");
 			pie.add(pieOptions[1]);
 			pie.addSeparator();
-			for(int i = 2; i <28;i++){
-				pieOptions[i] = new JMenuItem((char)('a'-2+i)+"");
+			for (int i = 2; i < 28; i++) {
+				pieOptions[i] = new JMenuItem((char) ('a' - 2 + i) + "");
 				pie.add(pieOptions[i]);
 			}
-			
+
 			add(option);
-		//	option.add(choosen);
-		//	option.addSeparator();
+			// option.add(choosen);
+			// option.addSeparator();
 			option.add(exit);
 
 			add(help);
@@ -403,18 +433,16 @@ public class Displayer extends JFrame {
 	}
 }
 
-class DictBar extends JFrame {
+class DictBarRecited extends JFrame {
 
-	public DictBar(DictionaryStatus[] ds) {
-		super("全部词库中已背单词数量及正确率图");
+	public DictBarRecited(DictionaryStatus[] ds) {
+		super("全部词库中已背单词数量图");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+
 		KeyedValues2DDataset keyedvalues2ddataset = createDataset(ds);
-		JFreeChart chart = ChartFactory.createStackedBarChart(
-				"全部词库中已背单词数量及正确率图", "词库",
-				"正确率                                             已背单词数",
-				keyedvalues2ddataset, PlotOrientation.HORIZONTAL, true, true,
-				false);
+		JFreeChart chart = ChartFactory.createStackedBarChart("全部词库中已背单词数量图",
+				"词库", "已背单词数量", keyedvalues2ddataset,
+				PlotOrientation.HORIZONTAL, true, true, false);
 
 		Font defaultFont = new Font("宋体", Font.BOLD, 15);// 将字体设置为支持中文的字体
 		chart.getCategoryPlot().getRangeAxis().setLabelFont(defaultFont);// 设置Y轴标识字体
@@ -429,10 +457,47 @@ class DictBar extends JFrame {
 
 	private KeyedValues2DDataset createDataset(DictionaryStatus[] ds) {
 		DefaultKeyedValues2DDataset defaultkeyedvalues2ddataset = new DefaultKeyedValues2DDataset();
-		for(int i =0;i<27;i++){
+		for (int i = 0; i < 27; i++) {
 			DictionaryStatus tempStatus = ds[i];
-			defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy()*(-1), "正确率", tempStatus.getName());
-			defaultkeyedvalues2ddataset.addValue(tempStatus.getRecitedCount(), "已背单词数", tempStatus.getName());
+			// defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy()*(-1),
+			// "正确率", tempStatus.getName());
+			defaultkeyedvalues2ddataset.addValue(tempStatus.getRecitedCount(),
+					"已背单词数", tempStatus.getName());
+		}
+		return defaultkeyedvalues2ddataset;
+	}
+}
+
+class DictBarAccuracy extends JFrame {
+
+	public DictBarAccuracy(DictionaryStatus[] ds) {
+		super("全部词库中已背单词正确率图");
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		KeyedValues2DDataset keyedvalues2ddataset = createDataset(ds);
+		JFreeChart chart = ChartFactory.createStackedBarChart("全部词库中已背单词正确率图",
+				"词库", "已背单词正确率", keyedvalues2ddataset,
+				PlotOrientation.HORIZONTAL, true, true, false);
+
+		Font defaultFont = new Font("宋体", Font.BOLD, 15);// 将字体设置为支持中文的字体
+		chart.getCategoryPlot().getRangeAxis().setLabelFont(defaultFont);// 设置Y轴标识字体
+		chart.getCategoryPlot().getDomainAxis().setLabelFont(defaultFont);// 设置X轴标识字体
+		chart.getLegend().setItemFont(defaultFont);// 设置图例说明字体
+		chart.getTitle().setFont(defaultFont);// 设置标题字体
+
+		ChartPanel chartpanel = new ChartPanel(chart);
+		chartpanel.setPreferredSize(new Dimension(640, 640));
+		setContentPane(chartpanel);
+	}
+
+	private KeyedValues2DDataset createDataset(DictionaryStatus[] ds) {
+		DefaultKeyedValues2DDataset defaultkeyedvalues2ddataset = new DefaultKeyedValues2DDataset();
+		for (int i = 0; i < 27; i++) {
+			DictionaryStatus tempStatus = ds[i];
+			defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy(),
+					"已背单词正确率", tempStatus.getName());
+			// defaultkeyedvalues2ddataset.addValue(tempStatus.getRecitedCount(),
+			// "已背单词数", tempStatus.getName());
 		}
 		return defaultkeyedvalues2ddataset;
 	}

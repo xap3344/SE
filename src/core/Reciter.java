@@ -1,5 +1,9 @@
 package core;
 
+import interfaces.Dictionary;
+import interfaces.DictionaryStatus;
+import interfaces.WordStatus;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -16,7 +20,9 @@ public class Reciter {
 
 	char initialChosen = '0';
 
-	public void initializeDictionary(String dicPath) {
+	public boolean initializeDictionary(String dicPath) {
+		if (!new File(dicPath).exists())
+			return false;
 		this.dicPath = dicPath;
 		this.dicPathWithoutExtension = dicPath.substring(0,
 				dicPath.length() - 4);
@@ -54,9 +60,13 @@ public class Reciter {
 
 			}
 		}
+		return true;
 	}
 
-	public void choosePieceWithInitial(char initial) {
+	public boolean choosePieceWithInitial(char initial) {
+		if (initial < 'a' || initial > 'z')
+			return false;
+
 		initialChosen = initial;
 		startingIndexInDict = -1;
 		currentIndexInWordsToBeRecited = 0;
@@ -68,7 +78,7 @@ public class Reciter {
 
 			/* 从dicFile中读入文件名，作为词库名初始化allWords */
 			String dicName = dicFile.getName();
-			dict = new Dictionary(dicName);
+			dict = new DictionaryImpl(dicName);
 
 			/* 开始读取文件 */
 			scanner = new Scanner(dicFile);
@@ -89,7 +99,7 @@ public class Reciter {
 				String meaning = splittedThisLine[1];
 				int correctCount = Integer.parseInt(splittedThisLine[2]);
 				int incorrectCount = Integer.parseInt(splittedThisLine[3]);
-				dict.insertWord(new WordStatus(word, meaning, correctCount,
+				dict.insertWord(new WordStatusImpl(word, meaning, correctCount,
 						incorrectCount));
 			}
 
@@ -97,6 +107,7 @@ public class Reciter {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		return true;
 	}
 
 	public DictionaryStatus getDictStatus() {
@@ -116,7 +127,7 @@ public class Reciter {
 
 				/* 从dicFile中读入文件名，作为词库名初始化allWords */
 				String dicName = dicFile.getName();
-				dictPiece[i - 'a'] = new Dictionary(dicName);
+				dictPiece[i - 'a'] = new DictionaryImpl(dicName);
 
 				/* 开始读取文件 */
 				scanner = new Scanner(dicFile);
@@ -131,12 +142,12 @@ public class Reciter {
 				while (scanner.hasNext()) {
 					thisLine = scanner.nextLine();
 					String[] splittedThisLine = thisLine.split("   ");
-
+				
 					String word = splittedThisLine[0];
 					String meaning = splittedThisLine[1];
 					int correctCount = Integer.parseInt(splittedThisLine[2]);
 					int incorrectCount = Integer.parseInt(splittedThisLine[3]);
-					dictPiece[i - 'a'].insertWord(new WordStatus(word, meaning,
+					dictPiece[i - 'a'].insertWord(new WordStatusImpl(word, meaning,
 							correctCount, incorrectCount));
 				}
 
@@ -144,15 +155,17 @@ public class Reciter {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			
+
 			int tempDicLength = dictPiece[i - 'a'].getDicLength();
 			int tempCorrectCount = dictPiece[i - 'a'].sumCorrectCounts();
 			int tempIncorrectCount = dictPiece[i - 'a'].sumIncorrectCounts();
 			int tempRecitedCount = dictPiece[i - 'a'].sumRecitedCounts();
 			double tempAccuracy = ((int) ((tempCorrectCount * 1.0 / (tempCorrectCount + tempIncorrectCount)) * 1000)) * 1.0 / 1000;
-			
-			dictPieceStatus[i-'a'] = new DictionaryStatus(""+i, tempDicLength, tempCorrectCount, tempIncorrectCount, tempRecitedCount, tempAccuracy);
-			
+
+			dictPieceStatus[i - 'a'] = new DictionaryStatusImpl("" + i,
+					tempDicLength, tempCorrectCount, tempIncorrectCount,
+					tempRecitedCount, tempAccuracy);
+
 			totalLengthAll += tempDicLength;
 			correctCountAll += tempCorrectCount;
 			incorrectCountAll += tempIncorrectCount;
@@ -162,8 +175,9 @@ public class Reciter {
 
 		double accuracyAll = ((int) ((correctCountAll * 1.0 / (correctCountAll + incorrectCountAll)) * 1000)) * 1.0 / 1000;
 
-		dictPieceStatus[26]=new DictionaryStatus("Total", totalLengthAll, correctCountAll,
-				incorrectCountAll, recitedCountAll, accuracyAll);
+		dictPieceStatus[26] = new DictionaryStatusImpl("Total", totalLengthAll,
+				correctCountAll, incorrectCountAll, recitedCountAll,
+				accuracyAll);
 		return dictPieceStatus;
 	}
 
@@ -196,13 +210,21 @@ public class Reciter {
 			ret = true;
 		}
 
-		wordsToBeRecited = new Dictionary("这次要背的内容");
+		wordsToBeRecited = new DictionaryImpl("这次要背的内容");
 		for (int i = startingIndexInDict; i <= maxIndex; i++) {
 			WordStatus originalWord = dict.getWordByIndex(i);
-			wordsToBeRecited.insertWord(new WordStatus(originalWord.getWord(),
+			wordsToBeRecited.insertWord(new WordStatusImpl(originalWord.getWord(),
 					originalWord.getMeaning(), 0, 0));
 		}
 		return ret;
+	}
+
+	public Dictionary getWordsToBeRecited() {
+		return wordsToBeRecited;
+	}
+
+	public void setWordsToBeRecited(Dictionary wordsToBeRecited) {
+		this.wordsToBeRecited = wordsToBeRecited;
 	}
 
 	private WordStatus getCurrentWord() {
@@ -315,4 +337,17 @@ public class Reciter {
 
 		return null;
 	}
+
+	public static String readme() throws FileNotFoundException {
+		File read = new File("readme.txt");
+		Scanner scanner = new Scanner(read);
+		String thisLine = "<html>";
+		while (scanner.hasNext()) {
+			thisLine += scanner.nextLine() + "<br>";
+		}
+		thisLine += "</html>";
+		return thisLine;
+
+	}
+
 }
