@@ -8,7 +8,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
 public class Reciter {
 	private String dicPath;
@@ -18,54 +24,67 @@ public class Reciter {
 	private Dictionary wordsToBeRecited;
 	int currentIndexInWordsToBeRecited = 0;
 
-	char initialChosen = '0';
+	String initialChosen = "";
+	public static HashMap<String, Integer> map = new HashMap<String, Integer>();
+	public final static String[] names = { "v", "n", "adj", "adv", "conj",
+			"prep", "pron", "int", "num", "null" };
 
-	public boolean initializeDictionary(String dicPath) {
+	public boolean initializeDictionary(String dicPath) throws Exception {
 		if (!new File(dicPath).exists())
 			return false;
 		this.dicPath = dicPath;
 		this.dicPathWithoutExtension = dicPath.substring(0,
 				dicPath.length() - 4);
-		File pieceA = new File(dicPathWithoutExtension + "-a.log");
-		if (!pieceA.exists()) {
-			Scanner scanner;
-			PrintWriter[] writer = new PrintWriter[26];
+		File pieceV = new File(dicPathWithoutExtension + "-v.log");
+		if (!pieceV.exists()) {
+			SAXReader reader = new SAXReader();
+			File file = new File(dicPath);
+			Document doc = reader.read(file);
+			Element root = doc.getRootElement();
 
-			try {
-				File dicFile = new File(dicPath);
-				/* 开始读取文件 */
-				scanner = new Scanner(dicFile);
+			PrintWriter[] writer = new PrintWriter[10];
 
-				for (int i = 0; i < 26; i++) {
-					writer[i] = new PrintWriter(new File(
-							dicPathWithoutExtension + "-" + (char) (i + 'a')
-									+ ".log"));
-					writer[i].println("0");
-					writer[i].flush();
-				}
+			map.put("v", 0);
+			map.put("n", 1);
+			map.put("adj", 2);
+			map.put("adv", 3);
+			map.put("conj", 4);
+			map.put("prep", 5);
+			map.put("pron", 6);
+			map.put("int", 7);
+			map.put("num", 8);
+			map.put("null", 9);
 
-				String thisLine;
-				while (scanner.hasNext()) {
-					thisLine = scanner.nextLine();
-					char firstLetter = thisLine.charAt(0);
-					writer[firstLetter - 'a'].println(thisLine + "   0   0");
-				}
-
-				for (int i = 0; i < 26; i++) {
-					writer[i].flush();
-					writer[i].close();
-				}
-				scanner.close();
-			} catch (FileNotFoundException e) {
+			for (int i = 0; i < 10; i++) {
+				writer[i] = new PrintWriter(dicPathWithoutExtension + "-"
+						+ names[i] + ".log");
+				writer[i].println("0");
+				writer[i].flush();
 
 			}
+			for (Iterator<Element> i = root.elementIterator(); i.hasNext();) {
+				Element ele = (Element) i.next();
+				String chinese = ele.elementText("chinese");
+				String english = ele.elementText("english");
+				if (!chinese.contains(".")) {
+					writer[9].println(english + "   " + chinese + "   0   0");
+				} else {
+					String str = chinese.substring(0, chinese.indexOf("."));
+					writer[map.get(str)].println(english + "   " + chinese
+							+ "   0   0");
+				}
+			}
+
+			for (int i = 0; i < 10; i++) {
+				writer[i].flush();
+				writer[i].close();
+			}
+
 		}
 		return true;
 	}
 
-	public boolean choosePieceWithInitial(char initial) {
-		if (initial < 'a' || initial > 'z')
-			return false;
+	public boolean choosePieceWithInitial(String initial) {
 
 		initialChosen = initial;
 		startingIndexInDict = -1;
@@ -115,19 +134,19 @@ public class Reciter {
 	}
 
 	public DictionaryStatus[] getAllDictStatus() {
-		Dictionary[] dictPiece = new Dictionary[26];
-		DictionaryStatus[] dictPieceStatus = new DictionaryStatus[27];
+		Dictionary[] dictPiece = new Dictionary[11];
+		DictionaryStatus[] dictPieceStatus = new DictionaryStatus[11];
 		int totalLengthAll = 0, correctCountAll = 0, incorrectCountAll = 0, recitedCountAll = 0;
 
-		for (char i = 'a'; i <= 'z'; i++) {
+		for (char i = 0; i < 10; i++) {
 			Scanner scanner;
 			try {
-				File dicFile = new File(dicPathWithoutExtension + "-" + i
-						+ ".log");
+				File dicFile = new File(dicPathWithoutExtension + "-"
+						+ names[i] + ".log");
 
 				/* 从dicFile中读入文件名，作为词库名初始化allWords */
 				String dicName = dicFile.getName();
-				dictPiece[i - 'a'] = new DictionaryImpl(dicName);
+				dictPiece[i] = new DictionaryImpl(dicName);
 
 				/* 开始读取文件 */
 				scanner = new Scanner(dicFile);
@@ -142,12 +161,12 @@ public class Reciter {
 				while (scanner.hasNext()) {
 					thisLine = scanner.nextLine();
 					String[] splittedThisLine = thisLine.split("   ");
-				
+
 					String word = splittedThisLine[0];
 					String meaning = splittedThisLine[1];
 					int correctCount = Integer.parseInt(splittedThisLine[2]);
 					int incorrectCount = Integer.parseInt(splittedThisLine[3]);
-					dictPiece[i - 'a'].insertWord(new WordStatusImpl(word, meaning,
+					dictPiece[i].insertWord(new WordStatusImpl(word, meaning,
 							correctCount, incorrectCount));
 				}
 
@@ -156,13 +175,13 @@ public class Reciter {
 				e.printStackTrace();
 			}
 
-			int tempDicLength = dictPiece[i - 'a'].getDicLength();
-			int tempCorrectCount = dictPiece[i - 'a'].sumCorrectCounts();
-			int tempIncorrectCount = dictPiece[i - 'a'].sumIncorrectCounts();
-			int tempRecitedCount = dictPiece[i - 'a'].sumRecitedCounts();
+			int tempDicLength = dictPiece[i].getDicLength();
+			int tempCorrectCount = dictPiece[i].sumCorrectCounts();
+			int tempIncorrectCount = dictPiece[i].sumIncorrectCounts();
+			int tempRecitedCount = dictPiece[i].sumRecitedCounts();
 			double tempAccuracy = ((int) ((tempCorrectCount * 1.0 / (tempCorrectCount + tempIncorrectCount)) * 1000)) * 1.0 / 1000;
 
-			dictPieceStatus[i - 'a'] = new DictionaryStatusImpl("" + i,
+			dictPieceStatus[i] = new DictionaryStatusImpl(names[i],
 					tempDicLength, tempCorrectCount, tempIncorrectCount,
 					tempRecitedCount, tempAccuracy);
 
@@ -175,7 +194,7 @@ public class Reciter {
 
 		double accuracyAll = ((int) ((correctCountAll * 1.0 / (correctCountAll + incorrectCountAll)) * 1000)) * 1.0 / 1000;
 
-		dictPieceStatus[26] = new DictionaryStatusImpl("Total", totalLengthAll,
+		dictPieceStatus[10] = new DictionaryStatusImpl("Total", totalLengthAll,
 				correctCountAll, incorrectCountAll, recitedCountAll,
 				accuracyAll);
 		return dictPieceStatus;
@@ -213,8 +232,8 @@ public class Reciter {
 		wordsToBeRecited = new DictionaryImpl("这次要背的内容");
 		for (int i = startingIndexInDict; i <= maxIndex; i++) {
 			WordStatus originalWord = dict.getWordByIndex(i);
-			wordsToBeRecited.insertWord(new WordStatusImpl(originalWord.getWord(),
-					originalWord.getMeaning(), 0, 0));
+			wordsToBeRecited.insertWord(new WordStatusImpl(originalWord
+					.getWord(), originalWord.getMeaning(), 0, 0));
 		}
 		return ret;
 	}
@@ -260,7 +279,7 @@ public class Reciter {
 		return wordsToBeRecited.getDictionaryStatus();
 	}
 
-	public char getChosenInitial() {
+	public String getChosenInitial() {
 		return initialChosen;
 	}
 
@@ -340,6 +359,7 @@ public class Reciter {
 
 	public static String readme() throws FileNotFoundException {
 		File read = new File("readme.txt");
+		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(read);
 		String thisLine = "<html>";
 		while (scanner.hasNext()) {

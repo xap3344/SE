@@ -9,9 +9,6 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -35,14 +32,16 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.general.DefaultKeyedValues2DDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.KeyedValues2DDataset;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
 
 import interfaces.DictionaryStatus;
 import core.Reciter;
 
 public class Displayer extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private MyMenuBar menuBar = new MyMenuBar();
 	private ImageCanvas ca = new ImageCanvas();
 	private JPanel welcome = new JPanel();
@@ -145,9 +144,15 @@ public class Displayer extends JFrame {
 		jp.setLayout(new GridLayout(3, 1, 30, 30));
 
 		initialLetterList = new JComboBox<String>();
-		for (char i = 'a'; i <= 'z'; i++) {
-			initialLetterList.addItem(i + "");
-		}
+
+		initialLetterList.addItem("v");
+		initialLetterList.addItem("n");
+		initialLetterList.addItem("adj");
+		initialLetterList.addItem("adv");
+		initialLetterList.addItem("conj");
+		initialLetterList.addItem("prep");
+		initialLetterList.addItem("pron");
+		initialLetterList.addItem("null");
 
 		initialLetterList.setSelectedIndex(0);
 
@@ -243,8 +248,8 @@ public class Displayer extends JFrame {
 		validate();
 	}
 
-	public char getSelectedInitialLetter() {
-		return ((String) (initialLetterList.getSelectedItem())).charAt(0);
+	public String getSelectedInitialLetter() {
+		return (String) (initialLetterList.getSelectedItem());
 	}
 
 	public JButton getInitialLetterSubmit() {
@@ -324,6 +329,10 @@ public class Displayer extends JFrame {
 	}
 
 	private class ImageCanvas extends JPanel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		ImageIcon imageIcon = new ImageIcon("word.png");
 		Image image = imageIcon.getImage();
 
@@ -334,7 +343,7 @@ public class Displayer extends JFrame {
 
 	public void HelpDoc() throws FileNotFoundException {
 
-		JLabel jl = new JLabel(Reciter.readme(),JLabel.CENTER);
+		JLabel jl = new JLabel(Reciter.readme(), JLabel.CENTER);
 		JFrame jf = new JFrame();
 
 		jf.setTitle("Word Master Help");
@@ -350,6 +359,10 @@ public class Displayer extends JFrame {
 
 	private class MyMenuBar extends JMenuBar {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		JMenu option;
 		// JMenuItem choosen;
 		JMenuItem exit;
@@ -410,8 +423,8 @@ public class Displayer extends JFrame {
 			pieOptions[1] = new JMenuItem("所有词库");
 			pie.add(pieOptions[1]);
 			pie.addSeparator();
-			for (int i = 2; i < 28; i++) {
-				pieOptions[i] = new JMenuItem((char) ('a' - 2 + i) + "");
+			for (int i = 2; i < 11; i++) {
+				pieOptions[i] = new JMenuItem(Reciter.names[i - 2]);
 				pie.add(pieOptions[i]);
 			}
 
@@ -435,6 +448,11 @@ public class Displayer extends JFrame {
 
 class DictBarRecited extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public DictBarRecited(DictionaryStatus[] ds) {
 		super("全部词库中已背单词数量图");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -457,7 +475,7 @@ class DictBarRecited extends JFrame {
 
 	private KeyedValues2DDataset createDataset(DictionaryStatus[] ds) {
 		DefaultKeyedValues2DDataset defaultkeyedvalues2ddataset = new DefaultKeyedValues2DDataset();
-		for (int i = 0; i < 27; i++) {
+		for (int i = 0; i < 10; i++) {
 			DictionaryStatus tempStatus = ds[i];
 			// defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy()*(-1),
 			// "正确率", tempStatus.getName());
@@ -469,6 +487,11 @@ class DictBarRecited extends JFrame {
 }
 
 class DictBarAccuracy extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public DictBarAccuracy(DictionaryStatus[] ds) {
 		super("全部词库中已背单词正确率图");
@@ -492,7 +515,7 @@ class DictBarAccuracy extends JFrame {
 
 	private KeyedValues2DDataset createDataset(DictionaryStatus[] ds) {
 		DefaultKeyedValues2DDataset defaultkeyedvalues2ddataset = new DefaultKeyedValues2DDataset();
-		for (int i = 0; i < 27; i++) {
+		for (int i = 0; i < 9; i++) {
 			DictionaryStatus tempStatus = ds[i];
 			defaultkeyedvalues2ddataset.addValue(tempStatus.getAccuracy(),
 					"已背单词正确率", tempStatus.getName());
@@ -504,6 +527,11 @@ class DictBarAccuracy extends JFrame {
 }
 
 class DictPie extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public DictPie(DictionaryStatus ds) {
 		super(ds.getName());
@@ -523,9 +551,11 @@ class DictPie extends JFrame {
 
 		JFreeChart jfreechart = ChartFactory.createPieChart(
 				"Correct/Incorrect", count1, false, false, false);
+		@SuppressWarnings("unused")
 		PiePlot pieplot = (PiePlot) jfreechart.getPlot();
 		JFreeChart jfreechart1 = ChartFactory.createPieChart("Recited/Total",
 				count2, false, false, false);
+		@SuppressWarnings("unused")
 		PiePlot pieplot1 = (PiePlot) jfreechart1.getPlot();
 		jpanel.add(new ChartPanel(jfreechart));
 		jpanel.add(new ChartPanel(jfreechart1));

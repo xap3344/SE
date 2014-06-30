@@ -1,33 +1,26 @@
 package userInterface;
 
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.FileNotFoundException;
 
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jfree.ui.RefineryUtilities;
 
 import interfaces.DictionaryStatus;
 import core.Reciter;
 
-import java.util.ArrayList;
-
 public class Controler {
 	private Displayer frame = new Displayer();
 	private Reciter r = new Reciter();
 
-	public Controler() {
+	public Controler() throws Exception {
 
-		r.initializeDictionary("dictionary.txt");
-		frame.dictFileChosenView(r.getAllDictStatus()[26]);
+		r.initializeDictionary("dictionary.xml");
+		frame.dictFileChosenView(r.getAllDictStatus()[10]);
 
 		/* 为退出操作增加ActonListener */
 		ActionListener onExit = new ExitListener();
@@ -68,7 +61,7 @@ public class Controler {
 		ActionListener pie = new PieListener();
 		frame.getBarRecitedMenuItem().addActionListener(bar);
 		frame.getBarAccuracyMenuItem().addActionListener(bar);
-		for (int i = 0; i < 28; i++)
+		for (int i = 0; i < 11; i++)
 			frame.getPieMenuItem(i).addActionListener(pie);
 
 		/* 为提交背单词数目操作增加ActionListener */
@@ -103,14 +96,14 @@ public class Controler {
 		public void actionPerformed(ActionEvent e) {
 			String from = e.getActionCommand();
 			DictionaryStatus ds;
-			if (from.length() == 1) {
-				ds = r.getAllDictStatus()[from.charAt(0) - 'a'];
+			if (!from.equals("当前词库") && !from.equals("所有词库")) {
+				ds = r.getAllDictStatus()[Reciter.map.get(from)];
 
 			} else {
 				if (from.equals("当前词库"))
 					ds = r.getDictStatus();
 				else
-					ds = r.getAllDictStatus()[26];
+					ds = r.getAllDictStatus()[10];
 			}
 
 			DictPie p = new DictPie(ds);
@@ -181,7 +174,7 @@ public class Controler {
 	private class SumitInitialLetterListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			char initial = frame.getSelectedInitialLetter();
+			String initial = frame.getSelectedInitialLetter();
 			r.choosePieceWithInitial(initial);
 			frame.dictPieceChosenView(r.getDictStatus());
 			frame.getPieMenuItem(0).setEnabled(true);
@@ -256,7 +249,7 @@ public class Controler {
 								+ recStatus.getIncorrectCount() + "\n正确率:"
 								+ recStatus.getAccuracy(), "",
 						JOptionPane.INFORMATION_MESSAGE);
-				frame.dictFileChosenView(r.getAllDictStatus()[26]);
+				frame.dictFileChosenView(r.getAllDictStatus()[10]);
 			}
 		}
 	}
